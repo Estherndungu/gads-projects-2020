@@ -1,0 +1,156 @@
+#This is Creating A GKE Cluster with cloud shell instead of the UI
+#We will build a cluster
+#build a pod
+
+
+#The firs thing we do is deploy a cluste.
+#We set the environment for the zone and cluster name 
+	
+	export my_zone=us-central1-a
+	export my_cluster=standard-cluster-1
+
+
+#We then use the following comman to create a Kubernetes cluster
+#We allocate it three nodes. Most of the options here are default. It is standard type
+
+	gcloud container clusters create $my_cluster --num-nodes 3 --zone $my_zone --enable-ip-alias
+
+#we will then modify the standard cluster to have 4 nodes
+
+	gcloud container clusters resize $my_cluster --zone $my_zone --size=4
+
+#Open the Kubeconfig file with nano text editor and we can then examin the file
+
+	nano ~/.kube/config
+
+
+#Now we will use Kubectl to inspect the cluster.
+#to get all the information of the content we use the below code.
+
+	kubectl config view
+	
+#To print out the cluster information we execute the following code.
+
+	kubectl cluster-info
+
+#You can then print details for all the clusters in the kubeconfig file with the below code
+
+	kubectl config get-contexts
+
+#To change the context we execute the following command.
+
+	kubectl config use-context gke_${GOOGLE_CLOUD_PROJECT}_us-central1-a_standard-cluster-1
+	
+	#We have only one cluster so this did not change anything
+
+#Use the following comman to view the resources usage arooss thenodes of the cluster
+
+	Kubectl top nodes
+
+#We then enable bash autocompletion to Kubectl
+
+	source <(kubectl completion bash)
+
+#To deploy Pods to GKE Clusters
+#We fist display the cersion od nginx as a pod named nginx-1
+
+	kubectl create deployment nginx-1 --image nginx:latest
+
+#Thern we view the deployed pod
+
+	kubectl get pods
+
+#We now enter the Pod name into a variable to use in the lab. It can minimize human error.
+
+	export my_nginx_pod=[your_pod_name]
+
+#To confirm we have done the above step correctly we run the following command
+
+	echo $my_nginx_pod
+	
+#If we want to view the details of the pod
+
+	kubectl describe pod $my_nginx_pod
+
+#We will open the test file via the command line
+
+	nano ~/test.html
+	
+#To place the file in the corrent location in the nginx in the pod
+
+	kubectl cp ~/test.html $my_nginx_pod:/usr/share/nginx/html/test.html
+
+#To create a service to expose the pod we run:
+
+	kubectl expose pod $my_nginx_pod --port 80 --type LoadBalancer
+	
+	#This command creates a LoadBalancer service
+
+#To view
+
+	kubectl get services
+
+#Execute the following command to verify that the nginx container is serving the static HTML file
+
+		curl http://[EXTERNAL_IP]/test.html 
+		
+		#We place our external ip above
+
+#to view the resources being used by the nginx Pod
+
+	kubectl top pods
+
+
+# To prepare the environment clone the repository to the lab Cloud Shell.	
+
+	git clone https://github.com/GoogleCloudPlatformTraining/training-data-analyst
+
+#Change to the directory that contains the sample files for this lab
+
+	cd ~/training-data-analyst/courses/ak8s/04_GKE_Shell/
+
+#To deploy your manifest, execute the following command:
+
+	kubectl apply -f ./new-nginx-pod.yaml
+
+#To see a list of Pods
+
+	kubectl get pods
+
+#Execute the following command to start an interactive bash shell in the nginx container
+
+	kubectl exec -it new-nginx /bin/bash
+	
+#To install nano text editor
+
+	apt-get update
+	apt-get install nano	
+
+# To switch to the static files directory and create a test.html file:	
+
+	cd /usr/share/nginx/html
+	nano test.html
+
+#Copy the following
+
+	<html> <header><title>This is title</title></header>
+	<body> Hello world </body>
+	</html>
+
+#Then exit
+
+	exit
+
+#To set up port forwarding from Cloud Shell to the nginx Pod (from port 10081 of the Cloud Shell VM to port 80 of the nginx container)
+
+	kubectl port-forward new-nginx 10081:80
+
+#to test and modify nginx container through port fowarding
+
+	curl http://127.0.0.1:10081/test.html
+
+#To display the logs
+
+	kubectl logs new-nginx -f --timestamps
+
+#You can review the logs and thats it. The End

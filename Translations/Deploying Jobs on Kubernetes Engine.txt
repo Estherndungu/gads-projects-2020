@@ -1,0 +1,60 @@
+#This is how to deploy jobs on Kubernetes
+#You first needto define and deploy a job 
+
+#To create the environment xone and cluster we run the follwing command
+	export my_zone=us-central1-a
+	export my_cluster=standard-cluster-1
+
+#Configure kubectl tab completion
+
+	source <(kubectl completion bash)
+
+#To create a kubernetes cluster we use:
+
+	gcloud container clusters create $my_cluster --num-nodes 3  --enable-ip-alias --zone $my_zone
+
+#We then configure access to kubectl command-line tool
+
+	gcloud container clusters get-credentials $my_cluster --zone $my_zone
+
+#We then need to clone a github repo
+	
+	git clone https://github.com/GoogleCloudPlatformTraining/training-data-analyst
+
+#Move over to the directory that contains your files
+
+	cd ~/training-data-analyst/courses/ak8s/07_Jobs_CronJobs
+
+#To create and run a job
+
+	kubectl apply -f example-job.yaml
+
+#To check job status
+
+	kubectl describe job example-job
+
+#To list jobs in a cluster
+
+	kubectl get jobs
+
+#To retrieve the file from the Pod 
+
+	kubectl logs [POD-NAME]
+
+	# You must replace [POD-NAME] with the node name you recorded in the last task
+
+#To execute the Job
+
+	kubectl delete job example-job
+
+#To clean up and delete a Job
+
+
+	kubectl delete cronjob hello
+
+#vERIFY that jobs were deleted
+
+	
+	kubectl get jobs
+
+#And thats it lab over
